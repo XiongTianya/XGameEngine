@@ -9,7 +9,7 @@ let test = app.Class.extends({
         console.log('这是 一个类');
     },
 
-    main() {
+    show() {
         var canvas = document.getElementById('webgl');
         var gl = getWebGLContext(canvas);
         if (!gl) {

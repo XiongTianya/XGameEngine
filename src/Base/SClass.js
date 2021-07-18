@@ -1,10 +1,9 @@
-/*
- * @Author: xty 
- * @Date: 2021-07-16 12:29:32 
- * @Last Modified by: xty
- * @Last Modified time: 2021-07-16 12:45:28
+/**
+ * Black8 Game Studio By Sunny
+ * @author 刘黎明（Sunny）
+ * @version 创建时间：2017-04-10 15:00:00
+ * SClass
  */
-
 app.__extends = function (d, b) {
     for (let p in b)
         if (b.hasOwnProperty(p))
@@ -121,230 +120,95 @@ app.newObject = function (ctor, arg0, arg1, arg2, arg3, arg4) {
     return obj;
 };
 
+let objectList;
+app.roughSizeOfObject = function (object, onComplete, onProcess) {
+    if (objectList) {
+        return;
+    }
+    objectList = [];
+    let stack = [object];
+    let bytes = 0;
+    let maxBatch = Number.MAX_VALUE;
+    if (onComplete) {
+        maxBatch = 10000;
+    }
+    //
+    function next() {
+        if (onProcess) {
+            onProcess(bytes);
+        }
+        let count = 0;
+        while (stack.length && count < maxBatch) {
+            count++;
+            let value = stack.pop();
+
+            if (typeof value === app.TypeBoolean) {
+                bytes += 4;
+            }
+            else if (typeof value === app.TypeString) {
+                bytes += value.length * 2;
+            }
+            else if (typeof value === app.TypeNumber) {
+                bytes += 8;
+            }
+            else if (typeof value === app.TypeObject && objectList.indexOf(value) === -1) {
+                objectList[objectList.length] = value;
+                //
+                for (let i in value) {
+                    stack[stack.length] = value[i];
+                }
+            }
+        }
+        //
+        if (onComplete) {
+            if (stack.length) {
+                setTimeout(next, 10);
+            }
+            else {
+                objectList.length = 0;
+                objectList = null;
+                onComplete(bytes);
+            }
+        }
+    }
+    //
+    if (onComplete) {
+        setTimeout(next, 10);
+    }
+    else {
+        next();
+        objectList.length = 0;
+        objectList = null;
+    }
+    return bytes;
+};
+
 /**
  * @namespace
  * @name ClassManager
  */
 let ClassMgr = app.ClassMgr = {
-    // isDebug: false,
-    // isInstDebug: false,
-
-    // appendInst(inst) {
-    //     let name = inst.constructor.__name;
-    //     let names = ClassMgr._instDebugNames;
-    //     if (!names) {
-    //         names = ClassMgr._instDebugNames = [];
-    //     }
-    //     names[names.length] = name;
-    //     if (names.length > 100) {
-    //         names.shift();
-    //     }
-    // },
-
-    // dumpInstInfo() {
-    //     let info = "";
-    //     let names = ClassMgr._instDebugNames;
-    //     if (names) {
-    //         info = names.join("\n");
-    //         names.length = 0;
-    //     }
-    //     return info;
-    // },
-
-    dumpInfo() {
-        let t = this;
-        let info = "";
-        // if (ClassMgr.isDebug) {
-        let infos = [];
-        infos = infos.concat(t._dumpDefinitionInfo(app));
-        infos = infos.concat(t._dumpDefinitionInfo(game));
-        infos = infos.concat(t._dumpDefinitionInfo(lib));
-        info += "\n消耗信息：";
-        infos.sort(t._onSortCostInfo);
-        let len = infos.length;
-        for (let i = 0; i < len; i++) {
-            info += infos[i].info;
-        }
-        // info += "\n==============================";
-        // info += "\n调用信息：";
-        // infos.sort(t._onSortCallInfo);
-        // len = infos.length;
-        // for (let i = 0; i < len; i++) {
-        //     info += infos[i].info;
-        // }
-        // info += "\n==============================";
-        // info += "\n实例信息：";
-        // infos.sort(t._onSortInstInfo);
-        // len = infos.length;
-        // for (let i = 0; i < len; i++) {
-        //     info += infos[i].info;
-        // }
-        // }
-        return info;
-    },
-
-    _onSortCostInfo(info1, info2) {
-        if (info1.instCount > 0 && info2.instCount < 1) {
-            return -1;
-        }
-        else if (info1.instCount < 1 && info2.instCount > 0) {
-            return 1;
-        }
-        if (info1.cost > info2.cost) {
-            return -1;
-        }
-        else if (info1.cost < info2.cost) {
-            return 1;
-        }
-        if (info1.maxCost > info2.maxCost) {
-            return -1;
-        }
-        else if (info1.maxCost < info2.maxCost) {
-            return 1;
-        }
-        if (info1.callCount > info2.callCount) {
-            return -1;
-        }
-        else if (info1.callCount < info2.callCount) {
-            return 1;
-        }
-        return 0;
-    },
-
-    // _onSortCallInfo(info1, info2) {
-    //     if (info1.callCount > info2.callCount) {
-    //         return -1;
-    //     }
-    //     else if (info1.callCount < info2.callCount) {
-    //         return 1;
-    //     }
-    //     else {
-    //         if (info1.maxCost > info2.maxCost) {
-    //             return -1;
-    //         }
-    //         else if (info1.maxCost < info2.maxCost) {
-    //             return 1;
-    //         }
-    //         else {
-    //             if (info1.cost > info2.cost) {
-    //                 return -1;
-    //             }
-    //             else if (info1.cost < info2.cost) {
-    //                 return 1;
-    //             }
-    //             else {
-    //                 if (info1.instCount > info2.instCount) {
-    //                     return -1;
-    //                 }
-    //                 else if (info1.instCount < info2.instCount) {
-    //                     return 1;
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     return 0;
-    // },
-
-    // _onSortInstInfo(info1, info2) {
-    //     if (info1.instCount > info2.instCount) {
-    //         return -1;
-    //     }
-    //     else if (info1.instCount < info2.instCount) {
-    //         return 1;
-    //     }
-    //     else {
-    //         if (info1.callCount > info2.callCount) {
-    //             return -1;
-    //         }
-    //         else if (info1.callCount < info2.callCount) {
-    //             return 1;
-    //         }
-    //         else {
-    //             if (info1.maxCost > info2.maxCost) {
-    //                 return -1;
-    //             }
-    //             else if (info1.maxCost < info2.maxCost) {
-    //                 return 1;
-    //             }
-    //             else {
-    //                 if (info1.cost > info2.cost) {
-    //                     return -1;
-    //                 }
-    //                 else if (info1.cost < info2.cost) {
-    //                     return 1;
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     return 0;
-    // },
-
-    _dumpDefinitionInfo(definition) {
-        let t = this;
-        let infos = [];
-        for (let clsName in definition) {
-            let cls = definition[clsName];
-            if (typeof cls !== app.TypeFunction || !cls.__clsHash) {
-                continue;
-            }
-            if (cls.__instCount === undefined) {
-                cls.__instCount = 0;
-            }
-            let prototype = cls.prototype;
-            for (let name in prototype) {
-                let func = prototype[name];
-                if (typeof func === app.TypeFunction) {
-                    t._dumpPushInfo(infos, definition, cls, func, clsName, name);
-                }
-            }
-            let getters = cls.__getters__;
-            for (let name in getters) {
-                let func = getters[name];
-                t._dumpPushInfo(infos, definition, cls, func, clsName, name + "(getter)");
-            }
-            let setters = cls.__setters__;
-            for (let name in setters) {
-                let func = setters[name];
-                t._dumpPushInfo(infos, definition, cls, func, clsName, name + "(setter)");
-            }
-        }
-        return infos;
-    },
-
-    _dumpPushInfo(infos, definition, cls, fn, clsName, name) {
-        let info = "\n";
-        if (fn.__cost === undefined) {
-            fn.__cost = 0;
-            fn.__maxCost = 0;
-            fn.__callCount = 0;
-        }
-        info += "Cost:" + fn.__cost.toFixed(2) + "ms | ";
-        info += "Max Cost:" + fn.__maxCost.toFixed(2) + "ms | ";
-        info += "Call Count:" + fn.__callCount + " | ";
-        info += "Inst Count:" + cls.__instCount + " | ";
-        info += "@";
-        info += definition.ns + "." + clsName + ":" + name;
-        infos[infos.length] = { cost: fn.__cost, maxCost: fn.__maxCost, callCount: fn.__callCount, instCount: cls.__instCount, info: info };
-    }
+    trackAlloc: false
 };
 //
 (function () {
     let superProp = "_$_super";
-    //superProp = app.getNormP(superProp);
+    superProp = app.getNormP(superProp);
     let fnTest = new RegExp("\\b" + superProp.replace("$", "\\$") + "\\b");//fnTest = /\b_super\b/;
     let ctorProp = "_$ctor";
-    //ctorProp = app.getNormP(ctorProp);
+    ctorProp = app.getNormP(ctorProp);
     let constructorProp = "constructor";
     let desc = { writable: true, enumerable: true, configurable: true };
     let internalDesc = { writable: false, enumerable: false, configurable: false };
-
-    let benchmark = 0;//app.macro.BENCHMARK;
-    let _applyProps = function (_superCls, cls, props) {
+    //
+    let _applyProps = function (_superCls, cls, props, superProp, desc, internalDesc, fnTest) {
         let _super = _superCls.prototype;
         let prototype = cls.prototype;
         let map = {};
+        let benchmark = false;//app.macro.BENCHMARK;
+        let _tmpRtn;
         for (let name in props) {
-            let propName = name;//app.getNormDP(name);
+            let propName = app.getNormDP(name);
             if (propName !== name) {
                 map[propName] = name;
             }
@@ -353,16 +217,16 @@ let ClassMgr = app.ClassMgr = {
             let hasSuperCall = null;
             if (typeof obj === app.TypeFunction) {
                 override = (typeof _super[propName] === app.TypeFunction);
-                hasSuperCall = fnTest.test(obj);
+                hasSuperCall = true;//fnTest.test(obj);
                 if (override && hasSuperCall) {
                     if (benchmark) {
                         desc.value = (function (name, fn) {
                             let func = function () {
                                 let t = this;
-                                let tmp = t[superProp];
+                                let tmpSuper = t[superProp];
                                 t[superProp] = _super[name];
                                 let currTime = app.getTimer();
-                                let ret = fn.apply(t, arguments);
+                                _tmpRtn = fn.apply(t, arguments);
                                 let cost = app.getTimer() - currTime;
                                 func.__cost = cost;
                                 if (func.__maxCost === undefined || cost > func.__maxCost) {
@@ -372,9 +236,10 @@ let ClassMgr = app.ClassMgr = {
                                     func.__callCount = 0;
                                 }
                                 func.__callCount++;
-                                t[superProp] = tmp;
-                                return ret;
+                                t[superProp] = tmpSuper;
+                                return _tmpRtn;
                             };
+                            app.applyType(func);
                             if (cls._hashable) {
                                 app.SHC(func);
                             }
@@ -385,12 +250,13 @@ let ClassMgr = app.ClassMgr = {
                         desc.value = (function (name, fn) {
                             let func = function () {
                                 let t = this;
-                                let tmp = t[superProp];
+                                let tmpSuper = t[superProp];
                                 t[superProp] = _super[name];
-                                let ret = fn.apply(t, arguments);
-                                t[superProp] = tmp;
-                                return ret;
+                                _tmpRtn = fn.apply(t, arguments);
+                                t[superProp] = tmpSuper;
+                                return _tmpRtn;
                             };
+                            app.applyType(func);
                             if (cls._hashable) {
                                 app.SHC(func);
                             }
@@ -403,7 +269,7 @@ let ClassMgr = app.ClassMgr = {
                         desc.value = (function (name, fn) {
                             let func = function () {
                                 let currTime = app.getTimer();
-                                let ret = fn.apply(this, arguments);
+                                _tmpRtn = fn.apply(this, arguments);
                                 let cost = app.getTimer() - currTime;
                                 func.__cost = cost;
                                 if (func.__maxCost === undefined || cost > func.__maxCost) {
@@ -413,8 +279,9 @@ let ClassMgr = app.ClassMgr = {
                                     func.__callCount = 0;
                                 }
                                 func.__callCount++;
-                                return ret;
+                                return _tmpRtn;
                             };
+                            app.applyType(func);
                             if (cls._hashable) {
                                 app.SHC(func);
                             }
@@ -422,6 +289,7 @@ let ClassMgr = app.ClassMgr = {
                         })(name, obj);
                     }
                     else {
+                        app.applyType(obj);
                         if (cls._hashable) {
                             app.SHC(obj);
                         }
@@ -453,10 +321,10 @@ let ClassMgr = app.ClassMgr = {
                             getter = (function (name, fn) {
                                 let func = function () {
                                     let t = this;
-                                    let tmp = t[superProp];
+                                    let tmpSuper = t[superProp];
                                     t[superProp] = superGetter;
                                     let currTime = app.getTimer();
-                                    let ret = fn.apply(t, arguments);
+                                    _tmpRtn = fn.apply(t, arguments);
                                     let cost = app.getTimer() - currTime;
                                     getter.__cost = cost;
                                     if (getter.__maxCost === undefined || cost > getter.__maxCost) {
@@ -466,8 +334,8 @@ let ClassMgr = app.ClassMgr = {
                                         getter.__callCount = 0;
                                     }
                                     getter.__callCount++;
-                                    t[superProp] = tmp;
-                                    return ret;
+                                    t[superProp] = tmpSuper;
+                                    return _tmpRtn;
                                 };
                                 return func;
                             })(name, getter);
@@ -476,11 +344,11 @@ let ClassMgr = app.ClassMgr = {
                             getter = (function (name, fn) {
                                 return function () {
                                     let t = this;
-                                    let tmp = t[superProp];
+                                    let tmpSuper = t[superProp];
                                     t[superProp] = superGetter;
-                                    let ret = fn.apply(t, arguments);
-                                    t[superProp] = tmp;
-                                    return ret;
+                                    _tmpRtn = fn.apply(t, arguments);
+                                    t[superProp] = tmpSuper;
+                                    return _tmpRtn;
                                 };
                             })(name, getter);
                         }
@@ -490,7 +358,7 @@ let ClassMgr = app.ClassMgr = {
                             getter = (function (name, fn) {
                                 let func = function () {
                                     let currTime = app.getTimer();
-                                    let ret = fn.apply(this, arguments);
+                                    _tmpRtn = fn.apply(this, arguments);
                                     let cost = app.getTimer() - currTime;
                                     getter.__cost = cost;
                                     if (getter.__maxCost === undefined || cost > getter.__maxCost) {
@@ -500,14 +368,14 @@ let ClassMgr = app.ClassMgr = {
                                         getter.__callCount = 0;
                                     }
                                     getter.__callCount++;
-                                    return ret;
+                                    return _tmpRtn;
                                 };
                                 return func;
                             })(name, getter);
                         }
                     }
                     cls.__getters__[propName] = getter;
-                    app.JsUtil.defineGetAccessor(prototype, propName, getter, false, true);
+                    //app.JsUtil.defineGetAccessor(prototype, propName, getter, false, true);
                 }
                 if (setter) {
                     if (!cls.__setters__) {
@@ -522,10 +390,10 @@ let ClassMgr = app.ClassMgr = {
                             setter = (function (name, fn) {
                                 let func = function () {
                                     let t = this;
-                                    let tmp = t[superProp];
+                                    let tmpSuper = t[superProp];
                                     t[superProp] = superSetter;
                                     let currTime = app.getTimer();
-                                    let ret = fn.apply(t, arguments);
+                                    _tmpRtn = fn.apply(t, arguments);
                                     let cost = app.getTimer() - currTime;
                                     setter.__cost = cost;
                                     if (setter.__maxCost === undefined || cost > setter.__maxCost) {
@@ -535,8 +403,8 @@ let ClassMgr = app.ClassMgr = {
                                         setter.__callCount = 0;
                                     }
                                     setter.__callCount++;
-                                    t[superProp] = tmp;
-                                    return ret;
+                                    t[superProp] = tmpSuper;
+                                    return _tmpRtn;
                                 };
                                 return func;
                             })(name, setter);
@@ -545,11 +413,11 @@ let ClassMgr = app.ClassMgr = {
                             setter = (function (name, fn) {
                                 return function () {
                                     let t = this;
-                                    let tmp = t[superProp];
+                                    let tmpSuper = t[superProp];
                                     t[superProp] = superSetter;
-                                    let ret = fn.apply(t, arguments);
-                                    t[superProp] = tmp;
-                                    return ret;
+                                    _tmpRtn = fn.apply(t, arguments);
+                                    t[superProp] = tmpSuper;
+                                    return _tmpRtn;
                                 };
                             })(name, setter);
                         }
@@ -559,7 +427,7 @@ let ClassMgr = app.ClassMgr = {
                             setter = (function (name, fn) {
                                 let func = function () {
                                     let currTime = app.getTimer();
-                                    let ret = fn.apply(this, arguments);
+                                    _tmpRtn = fn.apply(this, arguments);
                                     let cost = app.getTimer() - currTime;
                                     setter.__cost = cost;
                                     if (setter.__maxCost === undefined || cost > setter.__maxCost) {
@@ -569,7 +437,7 @@ let ClassMgr = app.ClassMgr = {
                                         setter.__callCount = 0;
                                     }
                                     setter.__callCount++;
-                                    return ret;
+                                    return _tmpRtn;
                                 };
                                 return func;
                             })(name, setter);
@@ -579,7 +447,7 @@ let ClassMgr = app.ClassMgr = {
                     app.JsUtil.defineSetAccessor(prototype, propName, setter, false, true);
                 }
                 if (!getter && !setter) {
-                    app.error(2001, propName);
+                    //app.error(2001, propName);
                 }
             }
             else {//基本数据类型初始化
@@ -613,10 +481,16 @@ let ClassMgr = app.ClassMgr = {
         }
         desc.value = null;
         internalDesc.value = null;
-        //app.mixinDP(prototype, map);
+        app.mixinDP(prototype, map);
     };
 
-    app.Class = function () {
+    let Class = function () {
+    };
+
+    let finalDesc = { writable: false, enumerable: false, configurable: false };
+    Class.final = function (cls) {
+        internalDesc.value = true;
+        Object.defineProperty(cls, '__final__', finalDesc);
     };
 
     /**
@@ -625,25 +499,35 @@ let ClassMgr = app.ClassMgr = {
      * @param {object} props
      * @return {function}
      */
-    app.Class.extends = function (props) {
+    Class.extends = function (props) {
         let _superCls = this;
+        if (_superCls.__final__) {
+            throw new Error(_superCls.__name + " is final class!");
+        }
         let _super = _superCls.prototype;
         let prototype = Object.create(_super);
-
         // The dummy Class constructor
         let Class = function () {
             let t = this;
             if (Class._hashable) {
+                app.applyType(t);
                 app.SHC(t);
             }
             app.instCount++;
-            // if (typeof t.ctor === app.TypeFunction) {
             let benchmark = 0;//app.macro.BENCHMARK;
             if (benchmark) {
                 if (Class.__instCount === undefined) {
                     Class.__instCount = 0;
                 }
                 Class.__instCount++;
+                let instList = app.__instList;
+                if (!instList) {
+                    app.__instList = instList = [];
+                }
+                instList[instList.length] = t;
+                if (ClassMgr.trackAlloc) {
+                    console.warn("[app DEBUG] alloc inst:" + Class.__name + ":" + Class.__instCount);
+                }
             }
             if (!Class.safeAlloc && !Class.__freeCountDisabled) {
                 if (Class.__freeInstCount === undefined) {
@@ -655,9 +539,6 @@ let ClassMgr = app.ClassMgr = {
                     app.warn(3114, Class.__name);
                 }
             }
-            // if (ClassMgr.isInstDebug) {
-            //     ClassMgr.appendInst(t);
-            // }
             if (Class.__disconstruct__) {
                 if (!Class.poolCall) {
                     app.error(3101, Class.__name);
@@ -665,16 +546,20 @@ let ClassMgr = app.ClassMgr = {
             }
             else {
                 t.ctor.apply(t, arguments);
+                if (t.__PoolObject) {
+                    t.novel.apply(t, arguments);
+                    t.wakeUp.apply(t, arguments);
+                }
             }
-            // }
         };
         Class._hashable = (Class._hashable === undefined || Class._hashable) && _superCls._hashable;
         if (Class._hashable) {
+            app.applyType(Class);
             app.SHC(Class);
         }
         app.clsCount++;
         Class.__name = "SClass" + app.clsCount;
-        Class.__clsHash = 0;//app.getClsHash();
+        Class.__clsHash = app.getClsHash();
         Class.forProps = function (callback, thisArg) {
             let getters = Class.__getters__;
             let setters = Class.__setters__;
@@ -699,7 +584,7 @@ let ClassMgr = app.ClassMgr = {
             }
         };
 
-        desc.value = 0;//app.getHashCode();
+        desc.value = app.getHashCode();
         Object.defineProperty(prototype, '__pid', desc);
 
         Class.prototype = prototype;
@@ -710,7 +595,7 @@ let ClassMgr = app.ClassMgr = {
         // this.__getters__ && (Class.__getters__ = app.clone(this.__getters__));
         // this.__setters__ && (Class.__setters__ = app.clone(this.__setters__));
 
-        _applyProps(_superCls, Class, props);
+        _applyProps(_superCls, Class, props, superProp, desc, internalDesc, fnTest);
 
         Class.extends = app.Class.extends;
         Class.__Class = true;
@@ -744,7 +629,7 @@ let ClassMgr = app.ClassMgr = {
                     props[name] = obj;
                 }
             }
-            _applyProps(_superCls, Class, props);
+            _applyProps(_superCls, Class, props, superProp, desc, internalDesc, fnTest);
             // for (let name in props) {
             //     prototype[name] = props[name];
             // }
@@ -752,4 +637,6 @@ let ClassMgr = app.ClassMgr = {
         };
         return Class;
     };
+
+    app.Class = Class;
 })();

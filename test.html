@@ -32,12 +32,15 @@
     <title>Textured quad</title>
 </head>
 
-<body>
+<body onload="main()">
     <canvas id="webgl" width="103.75" height="128">
         Please use the browert supporting "canvas"
     </canvas>
+
+    <script src="./src/Base/Main.js"></script>
     <script>
         var app = {};
+        main();
     </script>
     <script src="./lib/webgl-utils.js"></script>
     <script src="./lib/webgl-debug.js"></script>
@@ -52,11 +55,12 @@
     <script src="./src/utils/LoadUtils.js"></script>
 
     <script src="test.js"></script>
+    <script>
+        let test1 = new test();
+        test1.show();
+    </script>
 
 </body>
-<script>
-    let test1 = new test();
-    test1.main();
-</script>
+
 
 </html>

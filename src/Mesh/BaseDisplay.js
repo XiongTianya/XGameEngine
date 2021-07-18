@@ -4,9 +4,12 @@
  * @Author: xty 
  * @Date: 2021-07-11 15:08:21 
  * @Last Modified by: xty
- * @Last Modified time: 2021-07-16 13:04:06
+ * @Last Modified time: 2021-07-18 16:42:40
  */
 app.BaseDisplay = app.Class.extends({
+    __Object: true,
+
+
     /**索引数据*/
     indices: null,
     indicesBuffer: null,
@@ -46,8 +49,7 @@ app.BaseDisplay = app.Class.extends({
         uniformMatrix: 'uniformMatrix'
     },
 
-
-    constructor() {
+    ctor() {
         let t = this;
         t.indices = [];
         t.vertex = [];
@@ -56,7 +58,43 @@ app.BaseDisplay = app.Class.extends({
         t.bufferDataSize = [];
         t.uniformLocations = [];
         t.uniformData = {};
+        t.UniformEnum = {
+            uniform1f: 'uniform1f',
+            uniform2f: 'uniform2f',
+            uniform3f: 'uniform3f',
+            uniform4f: 'uniform4f',
+            uniform4f: 'uniform4f',
+            uniform1fv: 'uniform1fv',
+            uniform2fv: 'uniform2fv',
+            uniform3fv: 'uniform3fv',
+            uniform4fv: 'uniform4fv',
+            uniform1i: 'uniform1i',
+            uniform2i: 'uniform2i',
+            uniform3i: 'uniform3i',
+            uniform4i: 'uniform4i',
+            uniform1iv: 'uniform1iv',
+            uniform2iv: 'uniform2iv',
+            uniform3iv: 'uniform3iv',
+            uniform4iv: 'uniform4iv',
+            uniformMatrix: 'uniformMatrix'
+        };
+
     },
+
+    getClass() {
+        return this.constructor;//Object.getPrototypeOf(t).constructor;
+    },
+
+    getClassName() {
+        return this.getClass().__name;
+    },
+
+    serialization() {
+    },
+
+    deserailization() {
+    },
+
 
 
     setGl(gl) {
@@ -72,7 +110,7 @@ app.BaseDisplay = app.Class.extends({
      */
     initShader() {
         let t = this;
-        if (!initShaders(gl, t.shaders.vertex_texture, t.shaders.fragment_texture)) {
+        if (!initShaders(t.gl, t.shaders.vertex_texture, t.shaders.fragment_texture)) {
             return;
         }
     },
@@ -117,7 +155,7 @@ app.BaseDisplay = app.Class.extends({
             t.bufferDatas[name] = t.gl.createBuffer();
         }
         t.bufferDataSize[name] = size;
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffers[name]);
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.bufferDatas[name]);
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(data), this.gl.STATIC_DRAW);
     },
     /**
@@ -182,6 +220,7 @@ app.BaseDisplay = app.Class.extends({
             return;
         }
         //const { type, value } = uniformData;
+        let UniformEnum = this.UniformEnum;
         switch (type) {
             case UniformEnum.uniformMatrix:
                 gl[type](uniformLocation, false, value);
