@@ -16,12 +16,14 @@ let Texture = app.Texture = app.BaseDisplay.extends({
     },
 
     load(url, onComplete, thisArgs, args) {
-        app.LoadUtils.loadTexture(this.gl, url).then((texture) => {
+        app.LoadUtils.loadTexture(this.gl, url).then((config) => {
             let t = this;
             if (onComplete) {
                 onComplete.call(thisArgs, args);
             }
-
+            let texture = config.texture;
+            t.width = config.width;
+            t.height = config.height;
             t.texture = texture;
             t.uniformData['u_Sampler'] = {
                 type: 'uniform1i',
@@ -61,6 +63,10 @@ let Texture = app.Texture = app.BaseDisplay.extends({
         }
     },
 
+    setPoints(points){
+        this.points = points;
+    },
+
     setData() {
         let t = this;
         // const { width, height, src, texture, x = 0, y = 0 } = data;
@@ -77,25 +83,32 @@ let Texture = app.Texture = app.BaseDisplay.extends({
         let width = texture.width;
         let height = texture.height;
         // 计算uv
-        const points = [
-            t._x, t._y,
-            t._x, t._y + height,
-            t._x + width, t._y,
-            t._x + width, t._y + height
-        ];
-        const indices = [0, 1, 2, 2, 1, 3];
+        // const points = [
+        //     t._x, t._y,
+        //     t._x, t._y + t.height,
+        //     t._x + t.width, t._y,
+        //     t._x + t.width, t._y + t.height
+        // ];
+
+        // const points = [
+        //   -0.5,-0.5,
+        //   -0.5,0.5,
+        //   0.5,-0.5,
+        //   0.5,0.5
+        // ];
+        const indices = [0, 1, 2, 2, 3, 0];
         const uv = [
-            0, 0,
-            0, 1,
-            1, 0,
-            1, 1
+            0.0, 0.0,
+            0.0, 1.0,
+            1.0, 0.0,
+            1.0, 1.0
         ];
 
         //this.vertex = points;
         //this.setBufferData(points, 'position', 2);
         this.initShader();
-        this.setVertex(points);
-        this.createBufferData(uv, 'uv', 2);
+        this.setVertex(t.points);
+        this.createBufferData(uv, 'a_TexCoord', 2);
         this.setIndices(indices);
 
         t.render();
@@ -103,12 +116,15 @@ let Texture = app.Texture = app.BaseDisplay.extends({
 
     render() {
         let t = this;
-        let gl = this.gl;
-        gl.activeTexture(gl.TEXTURE0);
         t.setUniformData(t.uniformData);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0,1); //绘制矩形
+
+        t._super();
+        let gl = this.gl; 
+        //gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.activeTexture(gl.TEXTURE0);
+        //gl.clear(gl.COLOR_BUFFER_BIT);
+    
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); //绘制矩形
     }
 
 })

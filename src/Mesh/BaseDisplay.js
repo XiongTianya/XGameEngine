@@ -139,7 +139,7 @@ app.BaseDisplay = app.Class.extends({
         let t = this;
         t.vertex = vertex;
         t.pointSize = size;
-        t.createBufferData(vertex, 'posotion', 2);
+        t.createBufferData(vertex, 'a_Position', 2);
     },
 
 
@@ -157,6 +157,9 @@ app.BaseDisplay = app.Class.extends({
         t.bufferDataSize[name] = size;
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.bufferDatas[name]);
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(data), this.gl.STATIC_DRAW);
+
+        // gl.bindBuffer(gl.ARRAY_BUFFER, vertexTexCoordBuffer);
+        // gl.bufferData(gl.ARRAY_BUFFER, verticesTexCoords, gl.STATIC_DRAW);
     },
     /**
     * 获取WebGLProgram对象
@@ -339,8 +342,20 @@ app.BaseDisplay = app.Class.extends({
 
 
     render() {
-        // let t = this;
-        // let bufferDatas = t.bufferDatas;
+        let t = this;
+        let gl = t.gl;
+        let bufferDatas = t.bufferDatas;
+        for (let key in bufferDatas) {
+            let data = bufferDatas[key];
+            let a_Position = t.gl.getAttribLocation(t.gl.program, key);
+            t.gl.bindBuffer(t.gl.ARRAY_BUFFER, data);
+            t.gl.vertexAttribPointer(a_Position, t.bufferDataSize[key], t.gl.FLOAT, false, 0, 0);
+            t.gl.enableVertexAttribArray(a_Position);
+        }
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indicesBuffer);
+        let shaderProgram = t.getWebGLProgram();
+        gl.useProgram(shaderProgram);
+        //if (this.vertex.length) { this.gl.drawArrays(this.gl[this.drawType], this.offset, vLen); }
 
         // bufferDatas.forEach(function (data, key) {
         //     let a_Position = gl.getAttribLocation(t.gl.program, key);

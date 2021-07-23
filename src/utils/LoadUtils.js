@@ -59,8 +59,9 @@ LoadUtils.loadTexture = function (gl, imagePath) {
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
         // 取消挂载
-        gl.bindTexture(gl.TEXTURE_2D, null);
-        return texture;
+        //gl.bindTexture(gl.TEXTURE_2D, null);
+        let config = {texture:texture,width:image.width,height:image.height}
+        return config;
     });
 }
 
