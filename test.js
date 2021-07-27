@@ -31,20 +31,24 @@ let test = app.Class.extends({
             console.error('获取不到gl');
             return
         }
+        app.gl = gl;
+        app.canvasWidth = canvas.width;
+        app.canvasHeight = canvas.height;
         let texture = new app.Texture();
         t.textures.push(texture);
-        texture.setGl(gl);
+        //texture.setGl(gl);
         texture.setPoints( [
             -0.5,-0.5,
             -0.5,0.5,
             0,-0.5,
             0,0.5
           ]);
+
         texture.load('sky.jpg');
 
         let texture2 = new app.Texture();
         t.textures.push(texture2);
-        texture2.setGl(gl);
+        //texture2.setGl(gl);
         texture2.setPoints( [
             0,-0.5,
             0,0.5,

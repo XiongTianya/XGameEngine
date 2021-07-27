@@ -27,6 +27,9 @@ app.BaseDisplay = app.Class.extends({
     uniformData: null,
     gl: null,
 
+    /**模型矩阵*/
+    _modelMatrix:null,
+
 
     UniformEnum: {
         uniform1f: 'uniform1f',
@@ -260,6 +263,14 @@ app.BaseDisplay = app.Class.extends({
         }
     },
 
+    /**
+     * 设置模型矩阵
+     * @param {} mat 模型矩阵 
+     */
+    setModelMatrix(mat){
+        this._modelMatrix = mat;
+    },  
+
     // get pointSize() {
     //     return this.pointSize || 0;
     // },
@@ -287,58 +298,6 @@ app.BaseDisplay = app.Class.extends({
             t.gl.deleteBuffer(t.bufferDatas[key]);
         }
     },
-
-
-
-    // setConfig(config) {
-    //     if (!config) {
-    //         return;
-    //     }
-    //     let xGL = config.xGL;
-    //     if (xGL) {
-    //         xGL.canvas.add(this);
-    //         this.gl = xGL.gl;
-    //     }
-    //     if (config.shaders) {
-    //         this.shaders = config.shaders;
-    //     }
-    // }
-
-
-
-
-    // setTexture(texture, key = 'u_Sample') {
-    //     this.uniformData[key] = {
-    //         type: 'uniform1i',
-    //         value: 0,
-    //         texture: texture,
-    //     }
-    //     this.texture = texture;
-    // }
-
-
-
-    /**
-     * 加载shader
-     * @param {string} str shader程序 
-     * @param {*} type 类型
-     */
-    // loadShader(str, type) {
-    //     let t = this;
-    //     let shader = t.gl.createShader(type);
-    //     t.gl.shaderSorce(shader, str);
-    //     t.gl.compileShader(shader);
-    //     return shader;
-    // }
-
-
-
-
-
-
-
-
-
 
 
     render() {

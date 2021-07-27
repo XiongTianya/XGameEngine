@@ -13,6 +13,11 @@ let Texture = app.Texture = app.BaseDisplay.extends({
             fragment_texture: shaderLib.fragment_texture
         }
         t.setShader(shaders);
+        t.setGl();
+    },
+
+    setGl(){
+        this._super(app.gl);
     },
 
     load(url, onComplete, thisArgs, args) {
@@ -29,13 +34,14 @@ let Texture = app.Texture = app.BaseDisplay.extends({
                 type: 'uniform1i',
                 value: 0,
             }
-            t.setData();
             t.loadComplete();
+            t.setData();
         })
     },
 
     loadComplete() {
-
+        let t=this;
+        t.updatePoints();
     },
 
 
@@ -56,11 +62,28 @@ let Texture = app.Texture = app.BaseDisplay.extends({
 
     setPosition(x, y) {
         let t = this;
-        t._x = x;
-        t._y = y;
+        t._x = x||0;
+        t._y = y||0;
         if (t.texture) {
             t.setData();
         }
+    },
+
+    /**更新顶点位置*/
+    updatePoints(){
+        let t=this;
+        if(!t.texture){
+            return;
+        }
+        let scaleWRatio = t.texture.width/app.canvasWidth;
+        let scaleHRatio = t.texture.height/app.canvasHeight;
+        let posXRatio = t._x/app.canvasWidth;
+        let posYRatio = t._y/app.canvasHeight;
+        
+        let mdoelMat = new Matrix4([
+            -1.0+scaleHRatio,0.0,0.0,0.0,
+
+        ]);
     },
 
     setPoints(points){
